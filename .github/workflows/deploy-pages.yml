@@ -1,9 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch: 
 
 permissions:
   contents: read
@@ -19,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@latest
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@latest
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -30,10 +28,10 @@ jobs:
         run: npm install -g http-server
 
       - name: Setup Pages
-        uses: actions/configure-pages@latest
+        uses: actions/configure-pages@v4
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@latest
+        uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
 
