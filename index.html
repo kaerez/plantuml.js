@@ -13,7 +13,7 @@
         background-color: #1a2234 !important;
         color: #f8fafc !important;
         border-color: #243049 !important;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a5a9b1' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a5a9b1' stroke-linecap='round' stroke-linejoin='rou[...]
         background-repeat: no-repeat !important;
         background-position: right 6px center !important;
         background-size: 16px 12px !important;
@@ -68,14 +68,20 @@ Bob -> Alice: Hello!
     <script src="playground/assets/examplePumls.js"></script>
     <script src="playground/assets/panzoom.min.js"></script>
     <script src="playground/assets/plantuml-decoder.min.js"></script>
-    <script src="LAST_COMMIT.js"></script>
+    
+    <script>
+      // Save decoder before CDN library overwrites it
+      const plantumlDecode = window.plantumlEncoder.decode;
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.js"></script>
 
     <script>
       // load parameters
       const pathname = window.location.pathname.match(/^.*[\/]/)[0] // until the trailing slash, do not include the filename
       const hashParams = window.location.hash.substr(1).split('&').reduce(function (res, item) {
               var parts = item.split('=')
-              res[parts[0]] = parts[1]
+              res[parts[0]] = decodeURIComponent(parts[1] || '')
               return res
       }, {})
 
@@ -85,7 +91,12 @@ Bob -> Alice: Hello!
       editor.setTheme("ace/theme/monokai")
       editor.session.setMode("ace/mode/javascript")
       if(hashParams['encodedString']){
-        editor.setValue(plantumlEncoder.decode(hashParams['encodedString']), -1)
+        try {
+          // Use the saved decoder function
+          editor.setValue(plantumlDecode(hashParams['encodedString']), -1)
+        } catch(e) {
+          console.error('Error decoding PlantUML:', e)
+        }
       }
       editor.focus()
 
@@ -109,6 +120,19 @@ Bob -> Alice: Hello!
 
       const debouncedRender = debounce(() => _render())
 
+      // Function to update URL with encoded string
+      function updateUrlWithEncodedString(pumlContent) {
+        try {
+          // Use plantumlEncoder.encode from the CDN library
+          const encoded = window.plantumlEncoder.encode(pumlContent)
+          window.location.hash = `#encodedString=${encoded}`
+        } catch(error) {
+          console.error('Error encoding PlantUML:', error)
+        }
+      }
+
+      const debouncedUpdateUrl = debounce((content) => updateUrlWithEncodedString(content), 1000)
+
       async function loadFromUrl(url){
         window.location.hash = `#example=${url}`
         const response = await fetch(url)
@@ -125,6 +149,7 @@ Bob -> Alice: Hello!
 
         editor.session.on('change', function(delta) {
           debouncedRender()
+          debouncedUpdateUrl(editor.getValue())
         })
       })
 
