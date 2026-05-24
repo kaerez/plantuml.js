@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Erez Kalman - KSEC
+# Author: Erez Kalman
+# Description: Automated deployment workflow for PlantUML.js project to GitHub Pages
+
 name: Deploy to GitHub Pages
 
 on:
